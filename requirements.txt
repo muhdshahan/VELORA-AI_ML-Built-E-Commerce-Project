@@ -1,0 +1,16 @@
+python==3.13.6
+fastapi
+uvicorn
+pydantic
+dotenv
+sqlalchemy
+alembic
+asyncpg
+passlib
+datetime
+python-jose
+pandas
+scikit-learn
+argon2-cffi
+transfomers 
+torch
