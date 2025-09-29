@@ -59,12 +59,18 @@ search = st.text_input("Search products")
 
 # Filter results based on search input
 if search:
-    results = [
-        p for p in products
-        if search.lower() in str(p.get("name", "")).lower()
-        or search.lower() in str(p.get("category", "")).lower()
-        or search.lower() in str(p.get("desc", "")).lower()
-    ]
+    BACKEND_URL = "http://localhost:8000/search/smart"
+    try:
+        resp = requests.post(BACKEND_URL, json={"query": search}, timeout=10)
+        if resp.status_code == 200:
+            results = resp.json()
+            st.write(f"{len(results)} products found:")
+            for p in results:
+                st.write(f"**{p['name']}** ({p['category']}) ₹{p['price']} – {p['description']}")
+        else:
+            st.warning("No results found.")
+    except Exception as e:
+        st.error(f"Error connecting to backend: {e}")
 else:
     results = products
 
