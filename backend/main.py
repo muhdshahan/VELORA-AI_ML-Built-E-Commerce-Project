@@ -13,7 +13,7 @@ app.include_router(orders.router)
 app.include_router(admin.router)
 app.include_router(feedback.router)
 app.include_router(cart.router)
-# app.include_router(search.router)
+app.include_router(search.router)
 
 @app.on_event("startup")
 async def on_startup():

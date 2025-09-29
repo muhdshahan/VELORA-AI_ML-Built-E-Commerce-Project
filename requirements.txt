@@ -14,3 +14,6 @@ scikit-learn
 argon2-cffi
 transfomers 
 torch
+langchain
+langchain-community
+sentence-transformers
