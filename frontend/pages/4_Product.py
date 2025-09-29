@@ -8,6 +8,7 @@ if st.button("View Cart"):
 if st.button("Go back to Catalog"):
         st.switch_page("pages/3_Catalog.py")
 
+# Feedback/logout logic
 if "show_logout_form" not in st.session_state:
     st.session_state.show_logout_form = False
 
@@ -22,7 +23,6 @@ else:
             if fb.strip():
                 BACKEND_URL = "http://localhost:8000/feedback/"
                 user_id = st.session_state.get("user_id")
-                print(f"Catalog: user_id{user_id}, feedback{fb}")
                 try:
                     resp = requests.post(BACKEND_URL, json={"user_id": user_id, "text": fb}, timeout=5)
                     if resp.status_code == 200:
@@ -35,7 +35,11 @@ else:
             else:
                 st.error("Please enter feedback before logout.")
 
+# Product detail and backend-powered recommendations
 p = st.session_state.get("selected_product")
+token = st.session_state.get("token")
+headers = {"Authorization": f"Bearer {token}"} if token else {}
+
 if not p:
     st.info("No product data.")
 else:
@@ -45,11 +49,39 @@ else:
     st.write(f"Description: {p['description']}")
     st.write(f"Stock: {p['stock']}")
 
-    # Simulate activity log for recommendations
-    st.session_state.setdefault("activity", []).append({"user": st.session_state.get("user", {}).get("username"), "product_id": p["id"], "action": "viewed"})
-    # Fallback "Recommendations" (actual: compute via backend in full app)
+     # Fetch backend recommendations & log view
     st.write("##### Recommended Products")
-    for rp in products[1:4]:
-        st.write(rp['name'])
+    BACKEND_URL = f"http://localhost:8000/products/view{p['id']}"
+    recommendations = []
+    try:
+        resp = requests.get(BACKEND_URL, headers=headers, timeout=5)
+        if resp.status_code == 200:
+            recommendations = resp.json()
+        else:
+            st.warning("Could not fetch recommendations.")
+    except Exception as e:
+        st.error(f"Error connecting to backend: {e}")
 
-    st.button("Add to Cart")
+    
+    if recommendations:
+        for rp in recommendations:
+            st.write(rp.get('name'))
+    else:
+        st.info("No recommendations available.")
+
+    # Add to Cart logic
+    with st.form(key=f"cart_form_{p['id']}"):
+            quantity = st.number_input("Qty", min_value=1, max_value=p['stock'], value=1)
+            if st.form_submit_button("Add to Cart"):
+                BACKEND_URL = "http://localhost:8000/cart/add"
+                data = {
+                    "product_id": p['id'],
+                    "quantity": quantity
+                }
+                token = st.session_state.get("token", "")
+                headers = {"Authorization": f"Bearer {token}"} if token else {}
+                resp = requests.post(BACKEND_URL, json=data, headers=headers)
+                if resp.status_code == 200:
+                    st.success("Added to cart!")
+                else:
+                    st.error(f"Add to cart failed: {resp.text}")
