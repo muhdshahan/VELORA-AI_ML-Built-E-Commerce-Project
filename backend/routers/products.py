@@ -11,9 +11,16 @@ from backend.models.activity import Activity
 router = APIRouter(prefix="/products", tags=["products"])
 
 # Admin creates product
-@router.post("/", response_model=ProductOut, dependencies=[Depends(get_current_admin)])
+@router.post("/", response_model=ProductOut)
 async def create_product(product_in: ProductCreate, db: AsyncSession = Depends(get_db)):
-    product = Product(**product_in.dict())
+    product = Product(
+        name=product_in.name,
+        category=product_in.category,
+        description=product_in.description,
+        price=product_in.price,
+        stock=product_in.stock,
+        image_url=product_in.image_url
+    )
     db.add(product)
     await db.commit()
     await db.refresh(product)
@@ -45,6 +52,6 @@ async def view_product(product_id: int, db:AsyncSession = Depends(get_db), curre
     await db.commit()
 
     # get collaborative recommendations
-    recommendations = await collaborative_recommendations(db, product.id, limit=6)
+    recommendations = await collaborative_recommendations(db, product.id, limit=4)
     return recommendations
 

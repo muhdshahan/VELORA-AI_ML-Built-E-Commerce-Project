@@ -18,8 +18,7 @@ try:
         timeout=5
         )
     data = resp.json()
-    print(data)
-    print(resp.status_code)
+    # print(f"Admin: data = {data}, status_code = {resp.status_code}")
     if resp.status_code == 200:
         st.subheader("Users")
         st.table(data)

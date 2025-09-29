@@ -21,12 +21,13 @@ async def get_user_sentiment(db: AsyncSession, user_id: int):
     feedbacks = result.scalars().all()
     # Run sentiment analysis
     if not feedbacks:
-        return None
+        return "No Feedback yet"
     # Concatenate all feedback texts, run a sentiment analyser
     feedback_texts = " ". join([f.text for f in feedbacks])
     logger.info(f"Retrieved feedbacks:{feedback_texts}")
     sentiment = analyze_sentiment(feedback_texts)
     logger.info(f"Sentiment:{sentiment}")
+    logger.info(f"Sentiment:{type(sentiment)}")
     return sentiment
 
 @router.get("/allusers", response_model=list[UserOut])
@@ -47,7 +48,7 @@ async def get_users(db: AsyncSession = Depends(get_db)):
                     email=user.email,
                     sentiment=sentiment
                 ))
-        logger.debug(output)
+        logger.info(f"output is: {output}")
         return output
     
     except Exception as e:

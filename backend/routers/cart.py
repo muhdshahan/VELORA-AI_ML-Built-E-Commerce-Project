@@ -7,6 +7,7 @@ from backend.models.cart import CartItem
 from backend.models.activity import Activity
 from backend.models.product import Product
 from backend.utils.dependencies import get_current_user
+from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/cart", tags=["cart"])
 
@@ -44,5 +45,5 @@ async def add_to_cart(item: CartAdd, db: AsyncSession = Depends(get_db), current
 # View cart
 @router.get("/", response_model=list[CartItemOut])
 async def view_cart(db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
-    q = await db.execute(select(CartItem).filter(CartItem.user_id == current_user.id))
+    q = await db.execute(select(CartItem).options(selectinload(CartItem.product)).filter(CartItem.user_id == current_user.id))
     return q.scalars().all()

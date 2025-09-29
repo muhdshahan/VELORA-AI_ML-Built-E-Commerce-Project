@@ -11,7 +11,6 @@ with st.form("loginForm"):
 if submit:
     # Backend endpoint URL
     BACKEND_URL = "http://localhost:8000/auth/login"
-
     try:
         resp = requests.post(
             BACKEND_URL,
@@ -20,6 +19,9 @@ if submit:
         )
         data = resp.json()
         if resp.status_code == 200:
+            # Save token to session 
+            st.session_state.token = data.get("access_token") or data.get("token")
+            st.session_state.role = data.get("role")
             if data["role"] == "admin":
                 st.switch_page("pages/6_Admin.py")
             else:

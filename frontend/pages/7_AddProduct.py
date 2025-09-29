@@ -1,10 +1,5 @@
 import streamlit as st
-
-orders = st.session_state.get("orders", [])
-
-st.subheader("Orders")
-for o in orders:
-    st.write(o)
+import requests
 
 st.subheader("Add Product")
 with st.form("addProd"):
@@ -13,11 +8,21 @@ with st.form("addProd"):
     price = st.number_input("Price", min_value=1)
     stock = st.number_input("Stock", min_value=1)
     desc = st.text_input("Description")
+    img_url = st.text_area("Image URL")
     submit = st.form_submit_button("Add Product")
 if submit:
-    prods = st.session_state.setdefault("products", [])
-    prods.append({"id":name.lower(),"name":name,"category":cat,"price":price,"desc":desc,"stock":stock})
-    st.success(f"Product {name} added.")
+    BACKEND_URL = "http://localhost:8000/products/"
+    try:
+        resp = requests.post(BACKEND_URL, json={"name": name, "category": cat, "description": desc, "price": price, "stock": stock, "image_url": img_url}, timeout=5)
+        print(f"AddProduct: status_code = {resp.status_code}")
+        data = resp.json()
+        print(resp.status_code)
+        if resp.status_code == 200:
+            st.success(f"Product {name} added.")
+        else:
+            st.error(data.get("error", "Product creation failed."))
+    except Exception as e:
+        st.error(f"Error connecting to backend:{e}")
 
 if st.button("View All Products"):
     st.switch_page("pages/8_AllProducts.py")

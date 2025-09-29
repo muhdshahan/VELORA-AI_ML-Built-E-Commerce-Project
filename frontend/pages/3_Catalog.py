@@ -28,42 +28,73 @@ else:
             if fb.strip():
                 BACKEND_URL = "http://localhost:8000/feedback/"
                 user_id = st.session_state.get("user_id")
+                print(f"Catalog: user_id{user_id}, feedback{fb}")
                 try:
                     resp = requests.post(BACKEND_URL, json={"user_id": user_id, "text": fb}, timeout=5)
                     if resp.status_code == 200:
                         st.session_state.clear()
                         st.switch_page("app.py")
                     else:
-                        st.error(resp.json().get("error", "Feedback storing."))
+                        st.error(resp.json().get("error", "Feedback storing error."))
                 except Exception as e:
                     st.error(f"Error connecting to backend: {e}")
             else:
                 st.error("Please enter feedback before logout.")
 
 
-# Sample products (backend: replace with GET /api/products)
-sample_products = [
-    {"id":"p01","name":"Stellar Sapphire Ring","category":"ring","price":299,"desc":"Sapphire in white gold.","stock":7},
-    {"id":"p02","name":"Lunar Velvet Dress","category":"dress","price":189,"desc":"Navy velvet, gala style.","stock":8},
-    {"id":"p03","name":"Astra Beaded Handbag","category":"bag","price":159,"desc":"Beaded constellation motifs.","stock":9},
-    {"id":"p04","name":"Celestia Pendant","category":"necklace","price":210,"desc":"Star diamond pendant.","stock":5},
-]
-products = st.session_state.setdefault("products", sample_products)
+BACKEND_URL = "http://localhost:8000/products/"
+# Fetch products only once, cache in session
+if "products" not in st.session_state:
+    try:
+        resp = requests.get(BACKEND_URL, timeout=5)
+        print(f"Catalog2: {resp.status_code}")
+        st.session_state.products = resp.json() if resp.status_code == 200 else []
+    except Exception as e:
+        st.error(f"Error connecting to backend: {e}")
+        st.session_state.products = []
+
+products = st.session_state.products
+
 search = st.text_input("Search products")
 
+# Filter results based on search input
 if search:
-    results = [p for p in products if search.lower() in p["name"].lower() or search.lower() in p["category"].lower() or search.lower() in p["desc"].lower()]
+    results = [
+        p for p in products
+        if search.lower() in str(p.get("name", "")).lower()
+        or search.lower() in str(p.get("category", "")).lower()
+        or search.lower() in str(p.get("desc", "")).lower()
+    ]
 else:
     results = products
 
 st.write(f"{len(results)} products found:")
 
 for p in results:
-    st.write(f"**{p['name']}** ({p['category']}) ₹{p['price']} – {p['desc']}")
-    cols = st.columns([1, 4, 2, 1])   # Adjust ratios for sizing
+    st.write(f"**{p['name']}** ({p['category']}) ₹{p['price']} – {p['description']}")
+    # Display product image as a thumbnail (height=80 pixels, can adjust)
+    if p.get('image_url'):
+        st.image(p['image_url'], width=80)  # Use width OR height for thumbnail effect
+    
+    cols = st.columns([1, 4, 2, 1])
     with cols[1]:
-        if st.button("View", key=p['id']+"_view"):
-            st.session_state.clear()
+        if st.button("View", key=str(p['id'])+"_view"):
+            st.session_state.selected_product = p  
             st.switch_page("pages/4_Product.py")
     with cols[2]:
-        st.button("Add to Cart", key=p['id']+"_cart")
+         with st.form(key=f"cart_form_{p['id']}"):
+            quantity = st.number_input("Qty", min_value=1, max_value=p['stock'], value=1)
+            if st.form_submit_button("Add to Cart"):
+                BACKEND_URL = "http://localhost:8000/cart/add"
+                data = {
+                    "product_id": p['id'],
+                    "quantity": quantity
+                }
+                token = st.session_state.get("token", "")
+                headers = {"Authorization": f"Bearer {token}"} if token else {}
+                resp = requests.post(BACKEND_URL, json=data, headers=headers)
+                if resp.status_code == 200:
+                    st.success("Added to cart!")
+                else:
+                    st.error(f"Add to cart failed: {resp.text}")
+
