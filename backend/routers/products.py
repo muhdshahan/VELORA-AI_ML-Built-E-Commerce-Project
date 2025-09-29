@@ -52,6 +52,6 @@ async def view_product(product_id: int, db:AsyncSession = Depends(get_db), curre
     await db.commit()
 
     # get collaborative recommendations
-    recommendations = await collaborative_recommendations(db, product.id, limit=4)
+    recommendations = await collaborative_recommendations(db, product.id)
     return recommendations
 

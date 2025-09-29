@@ -6,7 +6,7 @@ from backend.models.activity import Activity
 from backend.models.product import Product
 from typing import List
 
-async def collaborative_recommendations(db: AsyncSession, user_id: int, top_n: int = 6):
+async def collaborative_recommendations(db: AsyncSession, user_id: int, top_n: int = 4):
     """
     Collaborative Filtering using user-product interaction matrix.
     """
@@ -19,9 +19,16 @@ async def collaborative_recommendations(db: AsyncSession, user_id: int, top_n: i
     
     df = pd.DataFrame(data, columns=["user_id", "product_id", "action"])
 
+    action_score_map = {
+    "viewed": 1,
+    "added_to_cart": 2,
+    "purchased": 3
+    }
+    df["score"] = df["action"].map(action_score_map).fillna(0)
+
     # Build product matrix
     user_product_matrix = (
-        df.pivot_table(index="user_id", columns="product_id", values="action", aggfunc="sum", fill_value=0)
+        df.pivot_table(index="user_id", columns="product_id", values="score", aggfunc="sum", fill_value=0)
     )
 
     if user_id not in user_product_matrix:
@@ -31,8 +38,10 @@ async def collaborative_recommendations(db: AsyncSession, user_id: int, top_n: i
     similarity = cosine_similarity(user_product_matrix)
     sim_df = pd.DataFrame(similarity, index=user_product_matrix.index, columns=user_product_matrix.index)
 
+    if user_id not in sim_df.columns:
+        return []
     # Find top similar users
-    similar_users = sim_df["user_id"].sort_values(ascending=False).drop(user_id).head(top_n).index
+    similar_users = sim_df[user_id].sort_values(ascending=False).drop(user_id).head(top_n).index
 
     # Get products purchased by similar users
     similar_users_data = user_product_matrix.loc[similar_users]
