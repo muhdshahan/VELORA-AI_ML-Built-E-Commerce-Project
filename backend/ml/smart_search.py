@@ -24,7 +24,9 @@ async def build_faiss_db(db, pickle_path):
         "name": row.name,
         "category": row.category,
         "price": row.price,
-        "description": row.description
+        "description": row.description,
+        "image_url": getattr(row, "image_url", ""),  
+        "stock": getattr(row, "stock", 1)  
     } for row in products]
     faiss_db = FAISS.from_texts(product_texts, embedding_model, metadatas=metadatas)
     faiss_db.save_local(pickle_path)
@@ -51,7 +53,7 @@ async def semantic_search(query: str, db=None, top_k=4, pickle_path=PICKLE_PATH)
 
     results = []
     for doc, score in docs_and_scores:
-        cat = doc.metadata.get("category", "").lower().strip()
+        cat = doc.metadata.get("category").lower().strip()
         # Boost score for explicit category match
         if target_category and cat == target_category:
             score += 0.2

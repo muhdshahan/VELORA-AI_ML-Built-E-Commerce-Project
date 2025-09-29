@@ -66,9 +66,6 @@ if search:
         print(resp.status_code, resp.json())
         if resp.status_code == 200:
             results = resp.json()
-            st.write(f"{len(results)} products found:")
-            for p in results:
-                st.write(f"**{p['name']}** ({p['category']}) ₹{p['price']} – {p['description']}")
         else:
             st.warning("No results found.")
     except Exception as e:
