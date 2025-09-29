@@ -10,7 +10,7 @@ embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-Mi
 
 def load_faiss_db(pickle_path=PICKLE_PATH):
     if os.path.exists(pickle_path):
-        return FAISS.load_local(pickle_path, embedding_model)
+        return FAISS.load_local(pickle_path, embedding_model, allow_dangerous_deserialization=True)
     return None
 
 async def build_faiss_db(db, pickle_path):
@@ -30,7 +30,14 @@ async def build_faiss_db(db, pickle_path):
     faiss_db.save_local(pickle_path)
     return faiss_db
 
-async def semantic_search(query: str, db=None, top_k=10, pickle_path=PICKLE_PATH):
+def extract_query_category(query, categories=["necklace", "earrings", "ring", "nosering", "bracelet"]):
+    query_lower = query.lower()
+    for category in categories:
+        if category in query_lower:
+            return category
+    return None
+
+async def semantic_search(query: str, db=None, top_k=4, pickle_path=PICKLE_PATH):
     faiss_db = load_faiss_db(pickle_path)
     if not faiss_db and db is not None:
         faiss_db = await build_faiss_db(db, pickle_path)
@@ -39,4 +46,17 @@ async def semantic_search(query: str, db=None, top_k=10, pickle_path=PICKLE_PATH
     elif not faiss_db:
         return []
     docs_and_scores = faiss_db.similarity_search_with_score(query, k=top_k)
-    return [doc.metadata for doc, score in docs_and_scores if score > 0.2]
+    
+    target_category = extract_query_category(query)
+
+    results = []
+    for doc, score in docs_and_scores:
+        cat = doc.metadata.get("category", "").lower().strip()
+        # Boost score for explicit category match
+        if target_category and cat == target_category:
+            score += 0.2
+        results.append((doc.metadata, score))
+
+    # Sort by score and limit to top_k
+    results.sort(key=lambda x: x[1], reverse=True)
+    return [meta for meta, score in results[:top_k] if score > 0.8]

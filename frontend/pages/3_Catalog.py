@@ -56,12 +56,14 @@ if "products" not in st.session_state:
 products = st.session_state.products
 
 search = st.text_input("Search products")
-
+results = []
 # Filter results based on search input
+print(search)
 if search:
     BACKEND_URL = "http://localhost:8000/search/smart"
     try:
-        resp = requests.post(BACKEND_URL, json={"query": search}, timeout=10)
+        resp = requests.post(BACKEND_URL, json={"query": search}, timeout=20)
+        print(resp.status_code, resp.json())
         if resp.status_code == 200:
             results = resp.json()
             st.write(f"{len(results)} products found:")
