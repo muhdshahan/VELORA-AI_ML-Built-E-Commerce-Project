@@ -8,7 +8,7 @@ sentiment_pipeline = pipeline(
 
 def analyze_sentiment(text: str):
     """
-    Returns 'POSITIVE', 'NEGATIVE' or 'NEUTRAL' for input text.
+    Returns 'POSITIVE', 'NEGATIVE' for input text.
     """
     if not text.strip():
         return "NEUTRAL"

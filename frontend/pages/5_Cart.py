@@ -20,7 +20,6 @@ else:
             if fb.strip():
                 BACKEND_URL = "http://localhost:8000/feedback/"
                 user_id = st.session_state.get("user_id")
-                print(f"Catalog: user_id{user_id}, feedback{fb}")
                 try:
                     resp = requests.post(BACKEND_URL, json={"user_id": user_id, "text": fb}, timeout=5)
                     if resp.status_code == 200:
@@ -48,7 +47,6 @@ try:
         st.error("Error fetching cart: " + resp.text)
 except Exception as e:
     st.error(f"Error connecting to backend: {e}")
-print(f"Cart retrieved:{cart}")
 
 if not cart:
     st.info("Your cart is empty.")

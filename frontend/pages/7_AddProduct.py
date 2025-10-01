@@ -14,7 +14,6 @@ if submit:
     BACKEND_URL = "http://localhost:8000/products/"
     try:
         resp = requests.post(BACKEND_URL, json={"name": name, "category": cat, "description": desc, "price": price, "stock": stock, "image_url": img_url}, timeout=5)
-        print(f"AddProduct: status_code = {resp.status_code}")
         data = resp.json()
         print(resp.status_code)
         if resp.status_code == 200:
