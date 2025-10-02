@@ -1,43 +1,214 @@
-<!-- Single Product Detail -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Detail – Velora</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #fff;
+      color: #2C3E50;
+    }
+    main {
+      max-width: 800px;
+      margin: auto;
+    }
+    h2 {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #6A5ACD, #48C9B0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .button-row button {
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: #6A5ACD;
+      color: #fff;
+      transition: 0.2s;
+    }
+    .button-row button:hover {
+      background: #48C9B0;
+    }
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #F8F8FB;
+      padding: 1.5rem;
+      border-radius: 24px;
+      box-shadow: 0 6px 18px #6a5acd23, 0 2px 10px #48c9b032;
+      margin-bottom: 2rem;
+    }
+    .product-card img {
+      max-width: 200px;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+    .product-info b {
+      display: block;
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+    .caption {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #6A5ACD;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    .input-row input[type="number"] {
+      width: 60px;
+      padding: 0.3rem;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .input-row button {
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: #48C9B0;
+      color: #fff;
+      transition: 0.2s;
+    }
+    .input-row button:hover {
+      background: #6A5ACD;
+    }
+    .recommend-list {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .recommend-card {
+      background: #E6E6FA;
+      padding: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      flex: 1 1 45%;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .recommend-card:hover {
+      transform: scale(1.05);
+      background: #6A5ACD;
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
 <main>
   <h2>Product Detail</h2>
   <div class="button-row">
-    <a href="cart.html"><button>View Cart</button></a>
-    <a href="catalog.html"><button>Go back to Catalog</button></a>
+    <button id="viewCartBtn">View Cart</button>
+    <button id="backCatalogBtn">Go back to Catalog</button>
   </div>
-  <div class="product-card">
-    <img src="assets/sample_product.jpg" alt="Product">
-    <div class="product-info">
-      <b>Stellar Sapphire Ring</b> (ring)
-      <div class="caption">₹299</div>
-      <div>Description: Brilliant-cut sapphire set in white gold.</div>
-      <div>Stock: 7</div>
-    </div>
+
+  <div class="product-card" id="productCard">
+    Loading product...
   </div>
-  <div style="margin-top:24px">
-    <form>
-      <div class="input-row">
-        <label for="qty2">Qty</label>
-        <input type="number" id="qty2" min="1" max="7" value="1">
-        <button type="submit">Add to Cart</button>
-      </div>
-    </form>
-  </div>
+
   <h3>Recommended Products</h3>
-  <div class="recommend-list">
-    <div class="recommend-card">Lunar Velvet Dress</div>
-    <div class="recommend-card">Astra Beaded Handbag</div>
-    <!-- Add more as needed -->
+  <div class="recommend-list" id="recommendList">
+    <!-- Dynamic recommended products -->
   </div>
 </main>
+
+<script>
+  const productCard = document.getElementById('productCard');
+  const recommendList = document.getElementById('recommendList');
+  const productId = localStorage.getItem('selected_product_id');
+
+  async function loadProduct(id) {
+    try {
+      const resp = await fetch(`http://localhost:8000/products/${id}`);
+      if (!resp.ok) throw new Error('Failed to fetch product.');
+      const product = await resp.json();
+
+      productCard.innerHTML = `
+        <img src="${product.image_url || 'assets/sample_product.jpg'}" alt="${product.name}">
+        <div class="product-info">
+          <b>${product.name}</b>
+          <div>Category: ${product.category}</div>
+          <div class="caption">₹${product.price}</div>
+          <div>Description: ${product.description}</div>
+          <div>Stock: ${product.stock}</div>
+          <div class="input-row">
+            <label for="qtyInput">Qty</label>
+            <input type="number" id="qtyInput" min="1" max="${product.stock}" value="1">
+            <button id="addToCartBtn">Add to Cart</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('addToCartBtn').addEventListener('click', async () => {
+        const qty = parseInt(document.getElementById('qtyInput').value);
+        const token = localStorage.getItem('token') || '';
+        try {
+          const resp = await fetch('http://localhost:8000/cart/add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token ? `Bearer ${token}` : ''
+            },
+            body: JSON.stringify({product_id: product.id, quantity: qty})
+          });
+          if (resp.ok) alert('Added to cart!');
+          else alert('Failed to add to cart.');
+        } catch(e) {
+          alert('Error connecting to backend.');
+        }
+      });
+
+      // Optional: fetch recommended products
+      try {
+        const recResp = await fetch(`http://localhost:8000/products/recommended/${id}`);
+        if (recResp.ok) {
+          const recProducts = await recResp.json();
+          recommendList.innerHTML = recProducts.map(p => `<div class="recommend-card" onclick="viewProduct(${p.id})">${p.name}</div>`).join('');
+        }
+      } catch(e) {
+        console.log("No recommended products or error fetching them.");
+      }
+
+    } catch(e) {
+      productCard.innerHTML = `<p style="color:red;">${e.message}</p>`;
+    }
+  }
+
+  function viewProduct(id) {
+    localStorage.setItem('selected_product_id', id);
+    window.location.href = 'product.html';
+  }
+
+  document.getElementById('backCatalogBtn').addEventListener('click', () => {
+    window.location.href = 'catalog.html';
+  });
+
+  document.getElementById('viewCartBtn').addEventListener('click', () => {
+    window.location.href = 'cart.html';
+  });
+
+  if (productId) loadProduct(productId);
+  else productCard.innerHTML = 'Product not found. Go back to <a href="catalog.html">catalog</a>.';
+</script>
 </body>
 </html>

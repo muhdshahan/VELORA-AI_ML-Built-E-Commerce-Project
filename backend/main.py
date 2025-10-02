@@ -1,10 +1,20 @@
 """ Entry point """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from backend.routers import auth, products, orders, admin, feedback, search, cart
 from backend.db.database import engine, Base
 
 app = FastAPI(title="Velora - Premium Jewels & Clothing")
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],           
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Register routers
 app.include_router(auth.router)

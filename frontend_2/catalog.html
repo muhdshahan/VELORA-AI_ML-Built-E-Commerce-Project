@@ -1,43 +1,313 @@
-<!-- Products Catalog (user) -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Product Catalog – Velora</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Velora | Product Catalog</title>
+  <style>
+    :root {
+      --background: #FFFFFF;
+      --primary: #6A5ACD;
+      --secondary: #E6E6FA;
+      --accent: #48C9B0;
+      --text: #2C3E50;
+      --border-radius: 24px;
+      --shadow: 0 6px 18px #6a5acd23, 0 2px 10px #48c9b032;
+      --font: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      text-align: center;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 0.7rem 1.2rem;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: 0.2s;
+    }
+
+    .btn.light {
+      background: var(--secondary);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn.light:hover {
+      background: var(--accent);
+      color: #fff;
+      border: 2px solid var(--accent);
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn.primary:hover {
+      background: var(--accent);
+    }
+
+    .search-box {
+      margin: 1rem 0;
+      width: 100%;
+      max-width: 400px;
+      padding: 0.7rem;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      outline: none;
+    }
+
+    .search-box:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 5px rgba(106, 90, 205, 0.2);
+    }
+
+    #productCount {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .product-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .product-card {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 24px;
+      padding: 1rem;
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease;
+    }
+
+    .product-card:hover {
+      transform: scale(1.05);
+    }
+
+    .product-card img {
+      width: 80px;
+      height: auto;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .product-info {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-info b {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 1.1rem;
+    }
+
+    .product-info div {
+      font-size: 0.9rem;
+      line-height: 1.3;
+    }
+
+    .product-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-direction: column;
+      width: 100%;
+      align-items: center;
+    }
+
+    .product-actions input[type="number"] {
+      width: 80px;
+      padding: 0.3rem;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 0.3rem;
+    }
+
+    @media (max-width: 700px) {
+      .product-card {
+        width: 90%;
+      }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h2>Product Catalog</h2>
-  <div class="button-row">
-    <a href="cart.html"><button>View Cart</button></a>
-    <a href="login.html"><button>🔐 Logout</button></a>
-  </div>
-  <div class="info">You are browsing as a user.</div>
-  <input type="text" placeholder="Search products" style="margin:24px 0;width:100%;">
+  <div class="container">
+    <h1>Product Catalog</h1>
 
-  <div class="product-list">
-    <!-- Example Product Card -->
-    <div class="product-card">
-      <img src="assets/sample_product.jpg" alt="Product">
-      <div class="product-info">
-        <b>Stellar Sapphire Ring</b> <span>(ring)</span> <span>₹299</span>
-        <div>Description: Brilliant-cut sapphire set in white gold. Stock: 7</div>
-      </div>
-      <div class="product-actions">
-        <a href="product.html"><button>View</button></a>
-        <form>
-          <div class="input-row">
-            <label for="qty1">Qty</label>
-            <input type="number" id="qty1" min="1" max="7" value="1">
-            <button type="submit">Add to Cart</button>
-          </div>
-        </form>
-      </div>
+    <div class="top-actions">
+      <button class="btn light" id="viewCartBtn">View Cart</button>
+      <button class="btn light" id="logoutBtn">Logout</button>
     </div>
-    <!-- Repeat above block for more products -->
+
+    <input type="text" placeholder="Search products" class="search-box" id="searchInput">
+    <div id="productCount">0 products found</div>
+    <div class="product-list" id="productList"></div>
   </div>
-</main>
+
+  <script>
+    const productList = document.getElementById("productList");
+    const searchInput = document.getElementById("searchInput");
+    const productCount = document.getElementById("productCount");
+    let allProducts = [];
+
+    async function fetchProducts() {
+      try {
+        const resp = await fetch("http://localhost:8000/products/");
+        const data = await resp.json();
+        if (resp.ok) {
+          allProducts = data;
+          renderProducts(data);
+        } else {
+          productList.innerHTML = `<p style="color:red;">${data.error || "Failed to load products."}</p>`;
+        }
+      } catch (err) {
+        productList.innerHTML = `<p style="color:red;">Error connecting to backend: ${err}</p>`;
+      }
+    }
+
+    function renderProducts(products) {
+      productList.innerHTML = '';
+      productCount.textContent = `${products.length} products found`;
+      if (products.length === 0) {
+        productList.innerHTML = '<p style="text-align:center;">No products found.</p>';
+        return;
+      }
+
+      products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <img src="${product.image_url || 'assets/sample_product.jpg'}" alt="${product.name}">
+          <div class="product-info">
+            <b>${product.name}</b> (${product.category}) ₹${product.price}
+            <div>${product.description}</div>
+          </div>
+          <div class="product-actions">
+            <button class="btn light" onclick="viewProduct(${product.id})">View</button>
+            <div>
+              <input type="number" min="1" max="${product.stock}" value="1" id="qty_${product.id}">
+              <button class="btn light" onclick="addToCart(${product.id})">Add to Cart</button>
+            </div>
+          </div>
+        `;
+        productList.appendChild(card);
+      });
+    }
+
+    async function searchProducts(query) {
+      if (!query) {
+        renderProducts(allProducts);
+        return;
+      }
+      try {
+        const resp = await fetch("http://localhost:8000/search/smart", {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({query})
+        });
+        const data = await resp.json();
+        if (resp.ok) renderProducts(data);
+        else renderProducts([]);
+      } catch (err) {
+        console.error(err);
+        renderProducts([]);
+      }
+    }
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase();
+      searchProducts(query);
+    });
+
+    function viewProduct(id) {
+      localStorage.setItem('selected_product', id);
+      window.location.href = 'product.html';
+    }
+
+    async function addToCart(id) {
+      const qty = parseInt(document.getElementById(`qty_${id}`).value);
+      try {
+        const token = localStorage.getItem('token') || '';
+        const resp = await fetch('http://localhost:8000/cart/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          body: JSON.stringify({product_id: id, quantity: qty})
+        });
+        if (resp.ok) alert('Added to cart!');
+        else alert('Failed to add to cart.');
+      } catch(e) {
+        alert('Error connecting to backend.');
+      }
+    }
+
+    document.getElementById('viewCartBtn').addEventListener('click', () => {
+      window.location.href = 'cart.html';
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      // Optional: show feedback before logout
+      const feedback = prompt("Enter feedback before logout:");
+      if (feedback && feedback.trim() !== "") {
+        const user_id = localStorage.getItem('user_id');
+        fetch('http://localhost:8000/feedback/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({user_id, text: feedback})
+        }).finally(() => {
+          localStorage.clear();
+          window.location.href = 'index.html';
+        });
+      }
+    });
+
+    fetchProducts();
+  </script>
 </body>
 </html>

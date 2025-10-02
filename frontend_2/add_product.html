@@ -1,34 +1,201 @@
-<!-- Add product (admin) -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Product – Velora Admin</title>
+  <title>Velora | Add Product</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #6A5ACD, #f7eaf9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  .product-container {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    width: 800px;           /* Increased width */
+    max-height: 80vh;       /* Limit height */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .product-container h2 {
+    margin-bottom: 1rem;
+    font-family: var(--font-primary);
+    font-size: 2em;
+    background: linear-gradient(90deg, var(--primary), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Scrollable form wrapper with rounded corners */
+  .form-scroll {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 10px;
+    border-radius: 16px;
+  }
+
+  /* Hide scrollbar visually */
+  .form-scroll::-webkit-scrollbar { width: 0px; background: transparent; }
+  .form-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .form-group {
+    margin-bottom: 1rem;
+    text-align: left;
+  }
+
+  label {
+    font-size: 0.9rem;
+    color: #333;
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.2s;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 5px rgba(106, 90, 205, 0.2);
+  }
+
+  button {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--primary);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: 0.2s;
+  }
+
+  button:hover {
+    background: var(--accent);
+    color: var(--gold);
+  }
+
+  .back-links {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .back-links a button {
+    width: 100%;
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .message {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .success { color: #16a085; }
+  .error { color: #c0392b; }
+  </style>
 </head>
 <body>
-<main>
-  <h2>Add Product</h2>
-  <form>
-    <label>Name</label>
-    <input type="text" required>
-    <label>Category</label>
-    <input type="text" required>
-    <label>Price (₹)</label>
-    <input type="number" min="1" required>
-    <label>Stock</label>
-    <input type="number" min="1" required>
-    <label>Description</label>
-    <input type="text" required>
-    <label>Image URL</label>
-    <textarea></textarea>
-    <button type="submit">Add Product</button>
-    <div class="button-row">
-      <a href="all_products.html"><button type="button">View All Products</button></a>
-      <a href="admin.html"><button type="button">Go back to Dashboard</button></a>
+  <div class="product-container">
+    <h2>Add Product</h2>
+    <div class="form-scroll">
+      <form id="productForm">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" id="category" required>
+        </div>
+        <div class="form-group">
+          <label>Price (₹)</label>
+          <input type="number" id="price" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Stock</label>
+          <input type="number" id="stock" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="description" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="text" id="image_url">
+        </div>
+        <button type="submit">Add Product</button>
+      </form>
     </div>
-  </form>
-</main>
+
+    <div class="back-links">
+      <a href="allproducts.html"><button type="button">View All Products</button></a>
+      <a href="admin.html"><button type="button">Go to Dashboard</button></a>
+    </div>
+
+    <div id="responseMsg" class="message"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("productForm");
+    const responseMsg = document.getElementById("responseMsg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        name: document.getElementById("name").value,
+        category: document.getElementById("category").value,
+        price: parseFloat(document.getElementById("price").value),
+        stock: parseInt(document.getElementById("stock").value),
+        description: document.getElementById("description").value,
+        image_url: document.getElementById("image_url").value
+      };
+
+      try {
+        const resp = await fetch("http://localhost:8000/admin/addproduct", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        if (resp.ok) {
+          responseMsg.innerHTML = `<div class="success">✅ Product added successfully!</div>`;
+          form.reset();
+        } else {
+          responseMsg.innerHTML = `<div class="error">❌ ${data.error || "Failed to add product."}</div>`;
+        }
+      } catch (err) {
+        responseMsg.innerHTML = `<div class="error">⚠️ Error connecting to backend.</div>`;
+      }
+    });
+  </script>
 </body>
 </html>

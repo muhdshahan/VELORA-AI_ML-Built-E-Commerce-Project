@@ -1,37 +1,201 @@
-<!-- Admin dashboard -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Dashboard – Velora</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Velora | Admin Dashboard</title>
+  <style>
+    :root {
+      --background: #FFFFFF;
+      --primary: #6A5ACD;       /* Lavender Indigo */
+      --secondary: #E6E6FA;     /* Lavender Mist */
+      --accent: #48C9B0;        /* Aquamarine */
+      --text: #2C3E50;          /* Deep Navy */
+      --border-radius: 24px;
+      --shadow: 0 6px 18px #6a5acd23, 0 2px 10px #48c9b032;
+      --font: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .admin-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 2vw;
+      background: var(--background);
+      font-family: var(--font);
+    }
+    h1 {
+      font-family: var(--font);
+      font-size: 2.8em;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .admin-actions {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2.1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .admin-btn {
+      padding: 0.76rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.18s;
+      box-shadow: var(--shadow);
+      outline: none;
+    }
+    .admin-btn.light {
+      background: var(--secondary);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .admin-btn.light:hover {
+      background: var(--accent);
+      color: #fff;
+      border: 2px solid var(--accent);
+    }
+    .admin-btn.dark, .logout-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      width: 180px;
+      margin: 42px auto 0 auto;
+      display: block;
+    }
+    .admin-btn.dark:hover, .logout-btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+    .table-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2.2rem;
+    }
+    #usersContainer {
+      width: 100%;
+      max-width: 1050px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto 1.2em auto;
+      background: #fff;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      font-family: var(--font);
+      font-size: 1.08rem;
+      color: var(--text);
+    }
+    th, td {
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background: var(--secondary);
+    }
+    tr:hover {
+      background: #f8f8fb;
+    }
+    /* Responsive */
+    @media (max-width: 1050px) {
+      .table-wrapper, #usersContainer, table {
+        max-width: 97vw;
+        font-size: 0.97em;
+      }
+    }
+    @media (max-width: 700px) {
+      th, td { font-size: 0.91em; padding: 9px 8px; }
+      .admin-actions { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h2>Admin Dashboard</h2>
-  <div class="button-row">
-    <a href="add_product.html"><button>Add Product</button></a>
-    <a href="all_products.html"><button>View All Products</button></a>
-    <a href="index.html"><button>Logout</button></a>
+  <div class="admin-container">
+    <h1>Admin Dashboard</h1>
+    <div class="admin-actions">
+      <button class="admin-btn light" id="addProductBtn">Add Product</button>
+      <button class="admin-btn light" id="viewProductsBtn">View All Products</button>
+    </div>
+    <h2>Users</h2>
+    <div class="table-wrapper">
+      <div id="usersContainer">Loading users...</div>
+    </div>
+    <button class="admin-btn dark logout-btn" id="logoutBtn">Logout</button>
   </div>
-  <table class="admin-users-table">
-    <tr>
-      <th>Username</th>
-      <th>Email</th>
-      <th>Role</th>
-      <th>Sentiment</th>
-      <th>Products (Purchased)</th>
-    </tr>
-    <tr>
-      <td>user1</td>
-      <td>user1@example.com</td>
-      <td>user</td>
-      <td>Positive (2)</td>
-      <td>Lunar Velvet Dress, Stella Ring</td>
-    </tr>
-    <!-- Repeat for other users -->
-  </table>
-</main>
+  <script>
+    const usersContainer = document.getElementById("usersContainer");
+    async function fetchUsers() {
+      try {
+        const resp = await fetch("http://localhost:8000/admin/allusers");
+        const data = await resp.json();
+        if (resp.status === 200) {
+          if (data.length === 0) {
+            usersContainer.innerHTML = "<p>No users found.</p>";
+            return;
+          }
+          let tableHTML = `<table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Sentiment</th>
+              </tr>
+            </thead>
+            <tbody>`;
+          data.forEach(user => {
+            tableHTML += `<tr>
+                            <td>${user.id || "-"}</td>
+                            <td>${user.username}</td>
+                            <td>${user.email}</td>
+                            <td>${user.sentiment || "-"}</td>
+                          </tr>`;
+          });
+          tableHTML += "</tbody></table>";
+          usersContainer.innerHTML = tableHTML;
+        } else {
+          usersContainer.innerHTML = `<p style="color:red;">${data.error || "Failed to fetch users."}</p>`;
+        }
+      } catch (err) {
+        usersContainer.innerHTML = `<p style="color:red;">Error connecting to backend: ${err}</p>`;
+      }
+    }
+    fetchUsers();
+    document.getElementById("addProductBtn").addEventListener("click", () => {
+      window.location.href = "add_product.html";
+    });
+    document.getElementById("viewProductsBtn").addEventListener("click", () => {
+      window.location.href = "all_products.html";
+    });
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "index.html";
+    });
+  </script>
 </body>
 </html>
