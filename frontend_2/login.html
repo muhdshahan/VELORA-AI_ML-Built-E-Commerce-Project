@@ -1,25 +1,138 @@
-<!-- Login Form -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login – Velora</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Velora | Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6A5ACD, #f7eaf9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+    }
+    .login-container h2 {
+      margin-bottom: 1.5rem;
+      color: #6A5ACD;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+    label {
+      font-size: 0.9rem;
+      color: #333;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    input:focus {
+      border-color: #6A5ACD;
+      box-shadow: 0 0 5px rgba(106, 5, 114, 0.2);
+    }
+    button {
+      width: 100%;
+      padding: 0.9rem;
+      background: #6A5ACD;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #6A5ACD;
+    }
+    .error {
+      margin-top: 1rem;
+      color: #b71c1c;
+      font-size: 0.9rem;
+    }
+    .register-link {
+      margin-top: 1.5rem;
+      display: block;
+      color: #6A5ACD;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .register-link:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h2>Login to Velora</h2>
-  <form>
-    <label for="l-email">Email</label>
-    <input type="email" name="l-email" required>
-    <label for="l-password">Password</label>
-    <input type="password" name="l-password" required>
-    <button type="submit">Login</button>
-    <div class="button-row">
-      <a href="register.html"><button type="button">Don't have an account? Register</button></a>
-    </div>
-  </form>
-</main>
+  <div class="login-container">
+    <h2>Login to Velora</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+    <div id="errorMsg" class="error"></div>
+    <a href="register.html" class="register-link">Don't have an account? Register</a>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const resp = await fetch("http://localhost:8000/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await resp.json();
+
+        if (resp.status === 200) {
+          localStorage.setItem("token", data.access_token || data.token);
+          localStorage.setItem("role", data.role);
+
+          if (data.role === "admin") {
+            window.location.href = "admin.html";
+          } else {
+            localStorage.setItem("user_id", data.user_id);
+            window.location.href = "catalog.html";
+          }
+        } else {
+          document.getElementById("errorMsg").innerText =
+            data.error || "Login failed. Please try again.";
+        }
+      } catch (err) {
+        document.getElementById("errorMsg").innerText = "Error connecting to backend.";
+      }
+    });
+  </script>
 </body>
 </html>

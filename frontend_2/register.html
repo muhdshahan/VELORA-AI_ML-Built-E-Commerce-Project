@@ -1,32 +1,170 @@
-<!-- Registration Form -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Create Account – Velora</title>
+  <title>Velora | Register</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6A5ACD, #f7eaf9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .register-container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      width: 380px;
+      text-align: center;
+    }
+
+    .register-container h2 {
+      margin-bottom: 1.5rem;
+      font-family: var(--font-primary);
+      font-size: 2em;
+      background: linear-gradient(90deg, var(--primary), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    label {
+      font-size: 0.9rem;
+      color: #333;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 5px rgba(106, 90, 205, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--primary);
+      border: none;
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: var(--accent);
+      color: var(--gold);
+    }
+
+    .login-link {
+      margin-top: 1.5rem;
+      display: block;
+      color: var(--primary);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .login-link:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .success {
+      color: #16a085;
+    }
+
+    .error {
+      color: #c0392b;
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h2>Create Account</h2>
-  <form>
-    <label>Username</label>
-    <input type="text" maxlength="20" name="username" required>
-    <label>Email</label>
-    <input type="email" maxlength="48" name="email" required>
-    <label>Password</label>
-    <input type="password" maxlength="24" name="password" required>
-    <label>Role</label>
-    <select name="role">
-      <option value="user">User</option>
-      <option value="admin">Admin</option>
-    </select>
-    <button type="submit">Register</button>
-    <div class="button-row">
-      <a href="login.html"><button type="button">Already have an account? Login</button></a>
-    </div>
-  </form>
-</main>
+  <div class="register-container">
+    <h2>Create Account</h2>
+    <form id="registerForm">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="username" maxlength="20" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" maxlength="24" required>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit">Register</button>
+    </form>
+    <div id="responseMsg" class="message"></div>
+    <a href="login.html" class="login-link">Already have an account? Login</a>
+  </div>
+
+  <script>
+    const form = document.getElementById("registerForm");
+    const responseMsg = document.getElementById("responseMsg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        username: document.getElementById("username").value,
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+        role: document.getElementById("role").value
+      };
+
+      try {
+        const resp = await fetch("http://localhost:8000/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        if (resp.ok) {
+          responseMsg.innerHTML = `<div class="success">✅ Registration successful! Please login.</div>`;
+        } else {
+          responseMsg.innerHTML = `<div class="error">❌ ${data.error || "Registration failed."}</div>`;
+        }
+      } catch (err) {
+        responseMsg.innerHTML = `<div class="error">⚠️ Error connecting to backend.</div>`;
+      }
+    });
+  </script>
 </body>
 </html>
