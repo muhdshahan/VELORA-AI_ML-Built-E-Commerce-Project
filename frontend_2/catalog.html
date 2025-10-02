@@ -1,1 +1,43 @@
 <!-- Products Catalog (user) -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Catalog – Velora</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <h2>Product Catalog</h2>
+  <div class="button-row">
+    <a href="cart.html"><button>View Cart</button></a>
+    <a href="login.html"><button>🔐 Logout</button></a>
+  </div>
+  <div class="info">You are browsing as a user.</div>
+  <input type="text" placeholder="Search products" style="margin:24px 0;width:100%;">
+
+  <div class="product-list">
+    <!-- Example Product Card -->
+    <div class="product-card">
+      <img src="assets/sample_product.jpg" alt="Product">
+      <div class="product-info">
+        <b>Stellar Sapphire Ring</b> <span>(ring)</span> <span>₹299</span>
+        <div>Description: Brilliant-cut sapphire set in white gold. Stock: 7</div>
+      </div>
+      <div class="product-actions">
+        <a href="product.html"><button>View</button></a>
+        <form>
+          <div class="input-row">
+            <label for="qty1">Qty</label>
+            <input type="number" id="qty1" min="1" max="7" value="1">
+            <button type="submit">Add to Cart</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Repeat above block for more products -->
+  </div>
+</main>
+</body>
+</html>
