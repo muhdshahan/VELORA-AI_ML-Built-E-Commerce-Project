@@ -3,6 +3,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, ForeignKey, Float, DateTime, func
 from backend.db.database import Base
+from datetime import datetime
 
 class Order(Base):
     __tablename__ = "orders"

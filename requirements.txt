@@ -18,3 +18,4 @@ langchain
 langchain-community
 sentence-transformers
 faiss-cpu
+prophet
