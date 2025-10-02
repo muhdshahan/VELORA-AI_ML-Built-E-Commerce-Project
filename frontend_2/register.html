@@ -1,0 +1,32 @@
+<!-- Registration Form -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Account – Velora</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <h2>Create Account</h2>
+  <form>
+    <label>Username</label>
+    <input type="text" maxlength="20" name="username" required>
+    <label>Email</label>
+    <input type="email" maxlength="48" name="email" required>
+    <label>Password</label>
+    <input type="password" maxlength="24" name="password" required>
+    <label>Role</label>
+    <select name="role">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button type="submit">Register</button>
+    <div class="button-row">
+      <a href="login.html"><button type="button">Already have an account? Login</button></a>
+    </div>
+  </form>
+</main>
+</body>
+</html>
