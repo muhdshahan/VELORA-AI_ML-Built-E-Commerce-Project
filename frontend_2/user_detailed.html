@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Sales Detail</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>User Sales Detail</h2>
+  <div id="totalSales"></div>
+  <canvas id="salesChart" width="400" height="200"></canvas>
+  <button onclick="window.location.href='sales_analysis.html'">Overall Sales Analysis</button>
+
+  <script>
+    const userId = localStorage.getItem("selected_user");
+
+    async function fetchUserSales() {
+      const resp = await fetch(`http://localhost:8000/orders/user/${userId}/sales`);
+      const data = await resp.json();
+
+      document.getElementById("totalSales").innerText =
+        "Total Sales: ₹" + data.total_sales;
+
+      const labels = data.daily_sales.map(d => d.day);
+      const values = data.daily_sales.map(d => d.total_sales);
+
+      new Chart(document.getElementById("salesChart"), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Daily Sales',
+            data: values,
+            borderColor: '#6A5ACD',
+            fill: false
+          }]
+        }
+      });
+    }
+    fetchUserSales();
+  </script>
+</body>
+</html>

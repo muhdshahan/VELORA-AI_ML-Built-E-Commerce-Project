@@ -147,8 +147,10 @@
     </div>
     <button class="admin-btn dark logout-btn" id="logoutBtn">Logout</button>
   </div>
+
   <script>
     const usersContainer = document.getElementById("usersContainer");
+
     async function fetchUsers() {
       try {
         const resp = await fetch("http://localhost:8000/admin/allusers");
@@ -158,6 +160,7 @@
             usersContainer.innerHTML = "<p>No users found.</p>";
             return;
           }
+
           let tableHTML = `<table>
             <thead>
               <tr>
@@ -165,17 +168,25 @@
                 <th>Username</th>
                 <th>Email</th>
                 <th>Sentiment</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>`;
+
           data.forEach(user => {
             tableHTML += `<tr>
                             <td>${user.id || "-"}</td>
                             <td>${user.username}</td>
                             <td>${user.email}</td>
                             <td>${user.sentiment || "-"}</td>
+                            <td>
+                              <button class="admin-btn small" onclick="viewUserSales(${user.id})">
+                                View Sales
+                              </button>
+                            </td>
                           </tr>`;
           });
+
           tableHTML += "</tbody></table>";
           usersContainer.innerHTML = tableHTML;
         } else {
@@ -185,13 +196,22 @@
         usersContainer.innerHTML = `<p style="color:red;">Error connecting to backend: ${err}</p>`;
       }
     }
+
+    function viewUserSales(userId) {
+      localStorage.setItem("selected_user", userId);
+      window.location.href = "user_detailed.html";
+    }
+
     fetchUsers();
+
     document.getElementById("addProductBtn").addEventListener("click", () => {
       window.location.href = "add_product.html";
     });
+
     document.getElementById("viewProductsBtn").addEventListener("click", () => {
       window.location.href = "all_products.html";
     });
+
     document.getElementById("logoutBtn").addEventListener("click", () => {
       localStorage.clear();
       window.location.href = "index.html";
@@ -199,3 +219,4 @@
   </script>
 </body>
 </html>
+
