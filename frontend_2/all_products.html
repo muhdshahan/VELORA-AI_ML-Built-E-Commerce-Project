@@ -1,1 +1,43 @@
 <!-- All products (admin) -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Detail – Velora</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <h2>Product Detail</h2>
+  <div class="button-row">
+    <a href="cart.html"><button>View Cart</button></a>
+    <a href="catalog.html"><button>Go back to Catalog</button></a>
+  </div>
+  <div class="product-card">
+    <img src="assets/sample_product.jpg" alt="Product">
+    <div class="product-info">
+      <b>Stellar Sapphire Ring</b> (ring)
+      <div class="caption">₹299</div>
+      <div>Description: Brilliant-cut sapphire set in white gold.</div>
+      <div>Stock: 7</div>
+    </div>
+  </div>
+  <div style="margin-top:24px">
+    <form>
+      <div class="input-row">
+        <label for="qty2">Qty</label>
+        <input type="number" id="qty2" min="1" max="7" value="1">
+        <button type="submit">Add to Cart</button>
+      </div>
+    </form>
+  </div>
+  <h3>Recommended Products</h3>
+  <div class="recommend-list">
+    <div class="recommend-card">Lunar Velvet Dress</div>
+    <div class="recommend-card">Astra Beaded Handbag</div>
+    <!-- Add more as needed -->
+  </div>
+</main>
+</body>
+</html>
