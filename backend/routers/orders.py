@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from backend.db.database import get_db
 from backend.models.cart import CartItem
 from backend.models.order import Order
 from backend.models.product import Product
 from backend.models.activity import Activity
 from backend.utils.dependencies import get_current_user
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -47,3 +48,34 @@ async def checkout(db: AsyncSession = Depends(get_db), current_user = Depends(ge
 async def list_orders(db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     q = await db.execute(select(Order).filter(Order.user_id == current_user.id))
     return q.scalars().all()
+
+# Daily sales for a single user
+@router.get("/user/{user_id}/sales")
+async def user_sales(user_id: int, db: AsyncSession = Depends(get_db)):
+    q = await db.execute(
+        select(func.date(Order.created_at).label("day"),
+               func.sum(Order.total_price).label("total_sales"))
+        .filter(Order.user_id == user_id)
+        .group_by(func.date(Order.created_at))
+        .order_by("day")
+    )
+    sales = q.all()
+
+    total_sales = sum(row.total_sales for row in sales) if sales else 0
+
+    return {
+        "daily_sales": [{"day": str(row.day), "total_sales": row.total_sales} for row in sales],
+        "total_sales": total_sales
+    }
+
+# Overall daily sales across all users
+@router.get("/sales/overall")
+async def overall_sales(db: AsyncSession = Depends(get_db)):
+    q = await db.execute(
+        select(func.date(Order.created_at).label("day"),
+               func.sum(Order.total_price).label("total_sales"))
+        .group_by(func.date(Order.created_at))
+        .order_by("day")
+    )
+    sales = q.all()
+    return [{"day": str(row.day), "total_sales": row.total_sales} for row in sales]
