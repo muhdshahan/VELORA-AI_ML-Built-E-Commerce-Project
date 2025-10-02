@@ -8,6 +8,7 @@ from backend.models.product import Product
 from backend.models.activity import Activity
 from backend.utils.dependencies import get_current_user
 from fastapi.responses import JSONResponse
+from backend.ml.sales_forecast import get_daily_sales, forecast_sales
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -79,3 +80,14 @@ async def overall_sales(db: AsyncSession = Depends(get_db)):
     )
     sales = q.all()
     return [{"day": str(row.day), "total_sales": row.total_sales} for row in sales]
+
+@router.get("/sales/daily")
+async def daily_sales(db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
+    df = await get_daily_sales(db)
+    return df.to_dict(orient="records")
+
+
+@router.get("/sales/forecast")
+async def sales_forecast(periods: int = 30, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
+    forecast = await forecast_sales(db, periods=periods)
+    return forecast
