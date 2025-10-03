@@ -1,40 +1,203 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Sales Analysis</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Velora | Sales Analysis</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --background-gradient: linear-gradient(135deg, #6A5ACD, #8A2BE2);
+      --card-bg: #FFFFFF;
+      --primary: #6A5ACD;       
+      --secondary: #E6E6FA;     
+      --accent: #48C9B0;        
+      --text: #2C3E50;          
+      --border-radius: 20px;
+      --shadow: 0 6px 18px rgba(0,0,0,0.15), 0 2px 10px rgba(0,0,0,0.1);
+      --font: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--background-gradient);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .admin-container {
+      width: 92%;
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2.4em;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      margin-top: 2rem;
+      font-size: 1.3rem;
+      color: var(--primary);
+    }
+
+    /* Chart container */
+    .chart-wrapper {
+      width: 100%;
+      max-width: 850px;
+      height: 330px; /* slightly taller */
+      margin: 1.5rem 0;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      background: #fff;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* Buttons */
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .admin-btn {
+      padding: 0.7rem 1.3rem;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.18s;
+      box-shadow: var(--shadow);
+    }
+
+    .admin-btn.light {
+      background: var(--secondary);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .admin-btn.light:hover {
+      background: var(--accent);
+      color: #fff;
+      border: 2px solid var(--accent);
+    }
+  </style>
 </head>
 <body>
-  <h2>Overall Sales Analysis</h2>
-  <canvas id="overallChart" width="400" height="200"></canvas>
-  <h3>Forecast (Next 7 Days)</h3>
-  <canvas id="forecastChart" width="400" height="200"></canvas>
+  <div class="admin-container">
+    <h1>Overall Sales Analysis</h1>
+
+    <!-- Overall Sales Chart -->
+    <div class="chart-wrapper">
+      <canvas id="overallChart"></canvas>
+    </div>
+
+    <!-- Forecast Chart -->
+    <h3>Sales Forecast (Next 7 Days)</h3>
+    <div class="chart-wrapper">
+      <canvas id="forecastChart"></canvas>
+    </div>
+
+    <!-- Buttons -->
+    <div class="button-group">
+      <button class="admin-btn light" onclick="window.location.href='user_detailed.html'">Back to User Sales</button>
+      <button class="admin-btn light" onclick="window.location.href='admin.html'">Go to Dashboard</button>
+    </div>
+  </div>
 
   <script>
     async function fetchOverallSales() {
-      const resp = await fetch("http://localhost:8000/orders/sales/overall");
-      const data = await resp.json();
+      try {
+        const resp = await fetch("http://localhost:8000/orders/sales/overall");
+        const data = await resp.json();
 
-      const labels = data.map(d => d.day);
-      const values = data.map(d => d.total_sales);
+        const labels = data.map(d => d.day);
+        const values = data.map(d => d.total_sales);
 
-      new Chart(document.getElementById("overallChart"), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Total Sales', data: values, backgroundColor: '#48C9B0' }] }
-      });
+        new Chart(document.getElementById("overallChart"), {
+          type: 'bar',
+          data: { 
+            labels, 
+            datasets: [{
+              label: 'Total Sales',
+              data: values,
+              backgroundColor: '#48C9B0'
+            }] 
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, labels: { color: '#2C3E50' } }
+            },
+            scales: {
+              x: { ticks: { color: '#2C3E50' } },
+              y: { ticks: { color: '#2C3E50' } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Error loading overall sales", err);
+      }
     }
 
     async function fetchForecast() {
-      const resp = await fetch("http://localhost:8000/orders/sales/forecast");
-      const data = await resp.json();
+      try {
+        const resp = await fetch("http://localhost:8000/orders/sales/forecast");
+        const data = await resp.json();
 
-      const labels = data.forecast.map(d => d.ds);
-      const values = data.forecast.map(d => d.yhat);
+        const labels = data.forecast.map(d => d.ds);
+        const values = data.forecast.map(d => d.yhat);
 
-      new Chart(document.getElementById("forecastChart"), {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'Forecast Sales', data: values, borderColor: '#6A5ACD', fill: false }] }
-      });
+        new Chart(document.getElementById("forecastChart"), {
+          type: 'line',
+          data: { 
+            labels, 
+            datasets: [{
+              label: 'Forecast Sales',
+              data: values,
+              borderColor: '#6A5ACD',
+              fill: false
+            }] 
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, labels: { color: '#2C3E50' } }
+            },
+            scales: {
+              x: { ticks: { color: '#2C3E50' } },
+              y: { ticks: { color: '#2C3E50' } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Error loading forecast", err);
+      }
     }
 
     fetchOverallSales();

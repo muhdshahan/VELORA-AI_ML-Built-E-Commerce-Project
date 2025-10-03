@@ -253,7 +253,7 @@
 
     checkoutBtn.addEventListener('click', async () => {
       try {
-        const resp = await fetch(`${BACKEND_URL}checkout`, {method: 'POST', headers});
+        const resp = await fetch(`http://localhost:8000/orders/checkout`, {method: 'POST', headers});
         if (resp.ok) {
           alert('Order placed! Thank you.');
           cart = [];

@@ -88,6 +88,6 @@ async def daily_sales(db: AsyncSession = Depends(get_db), current_user = Depends
 
 
 @router.get("/sales/forecast")
-async def sales_forecast(periods: int = 30, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
+async def sales_forecast(periods: int, db: AsyncSession = Depends(get_db)):
     forecast = await forecast_sales(db, periods=periods)
     return forecast
