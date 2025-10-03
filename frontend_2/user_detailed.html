@@ -171,105 +171,139 @@
   </div>
 
     <script>
-    const userId = localStorage.getItem("selected_user");
-    let salesData = [];
-    let chartInstance;
+const userId = localStorage.getItem("selected_user");
+let salesData = [];
+let chartInstance;
 
-    async function fetchUserSales() {
-      try {
-        const resp = await fetch(`http://localhost:8000/orders/user/${userId}/sales`);
-        const data = await resp.json();
+async function fetchUserSales() {
+  try {
+    const resp = await fetch(`http://localhost:8000/orders/user/${userId}/sales`);
+    const data = await resp.json();
 
-        document.getElementById("totalSales").innerText =
-          "Total Sales: ₹" + data.total_sales;
+    document.getElementById("totalSales").innerText =
+      "Total Sales: ₹" + data.total_sales;
 
-        salesData = data.daily_sales;
+    salesData = data.daily_sales;
 
-        // set date filter min/max
-      if (salesData.length > 0) {
-        document.getElementById("startDate").min = salesData[0].day;
-        document.getElementById("startDate").max = salesData[salesData.length - 1].day;
+    // set date filter min/max
+    if (salesData.length > 0) {
+      document.getElementById("startDate").min = salesData[0].day;
+      document.getElementById("startDate").max = salesData[salesData.length - 1].day;
 
-        document.getElementById("endDate").min = salesData[0].day;
-        document.getElementById("endDate").value = ""; // optional
-      }
-
-        renderChart(salesData);
-      } catch (err) {
-        document.getElementById("totalSales").innerText =
-          "Error loading sales data.";
-      }
+      document.getElementById("endDate").min = salesData[0].day;
+      document.getElementById("endDate").value = ""; // optional
     }
 
-    function renderChart(data) {
-      const labels = data.map(d => d.day);
-      const values = data.map(d => d.total_sales);
+    renderChart(salesData, "Daily Sales");
+  } catch (err) {
+    document.getElementById("totalSales").innerText =
+      "Error loading sales data.";
+  }
+}
 
-      if (chartInstance) chartInstance.destroy();
+function renderChart(data, label = "Sales") {
+  if (!data || data.length === 0) return;
 
-      chartInstance = new Chart(document.getElementById("salesChart"), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Daily Sales',
-            data: values,
-            borderColor: '#6A5ACD',
-            backgroundColor: 'rgba(106, 90, 205, 0.08)',
-            tension: 0, // straight lines instead of curves
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true, labels: { color: '#2C3E50' } }
-          },
-          scales: {
-            x: { ticks: { color: '#2C3E50' } },
-            y: { ticks: { color: '#2C3E50' } }
-          }
-        }
-      });
-    }
+  // Detect if forecast data (has yhat field)
+  const isForecast = data[0]?.yhat !== undefined;
 
-      function applyDateFilter() {
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
+  let labels, values, lower, upper;
+  if (isForecast) {
+    labels = data.map(d => d.ds);           // use ds as date
+    values = data.map(d => d.yhat);         // yhat as main sales line
+    lower = data.map(d => d.yhat_lower);    // lower bound
+    upper = data.map(d => d.yhat_upper);    // upper bound
+  } else {
+    labels = data.map(d => d.day);
+    values = data.map(d => d.total_sales);
+  }
 
-      if (!start) {
-        alert("Please select a start date.");
-        return;
+  if (chartInstance) chartInstance.destroy();
+
+  const datasets = [{
+    label: label,
+    data: values,
+    borderColor: isForecast ? '#48C9B0' : '#6A5ACD',
+    backgroundColor: isForecast ? 'rgba(72, 201, 176, 0.1)' : 'rgba(106, 90, 205, 0.08)',
+    tension: 0,
+    fill: true
+  }];
+
+  // Add forecast interval shading
+  if (isForecast) {
+    datasets.push({
+      label: "Confidence Interval",
+      data: upper,
+      borderWidth: 0,
+      pointRadius: 0,
+      backgroundColor: 'rgba(72, 201, 176, 0.2)',
+      fill: "-1" // fill between this and previous dataset
+    });
+    datasets.push({
+      label: "Lower Bound",
+      data: lower,
+      borderWidth: 0,
+      pointRadius: 0,
+      backgroundColor: 'rgba(72, 201, 176, 0.2)',
+      fill: false
+    });
+  }
+
+  chartInstance = new Chart(document.getElementById("salesChart"), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#2C3E50' } }
+      },
+      scales: {
+        x: { ticks: { color: '#2C3E50' } },
+        y: { ticks: { color: '#2C3E50' } }
       }
+    }
+  });
+}
 
-      // If end date is empty, take all data from start
-      const filtered = salesData.filter(d => {
-        if (end) return d.day >= start && d.day <= end;
-        else return d.day >= start;
-      });
+function applyDateFilter() {
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
 
-      renderChart(filtered, end ? "Filtered Sales" : "Filtered Sales from " + start);
+  if (!start) {
+    alert("Please select a start date.");
+    return;
+  }
+
+  const filtered = salesData.filter(d => {
+    if (end) return d.day >= start && d.day <= end;
+    else return d.day >= start;
+  });
+
+  renderChart(filtered, end ? "Filtered Sales" : "Filtered Sales from " + start);
+}
+
+async function applyForecast() {
+  const periods = parseInt(document.getElementById("forecastDays").value) || 30;
+  try {
+    const resp = await fetch(`http://localhost:8000/orders/sales/forecast?periods=${periods}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token") || ""}` }
+    });
+    const forecast = await resp.json();
+
+    if (forecast.msg) {
+      alert(forecast.msg);
+      return;
     }
 
-      async function applyForecast() {
-      const periods = parseInt(document.getElementById("forecastDays").value) || 30;
-      try {
-        const resp = await fetch(`http://localhost:8000/orders/sales/forecast?periods=${periods}`);
-        const forecast = await resp.json();
+    renderChart(forecast, "Forecasted Sales");
+  } catch (err) {
+    alert("Error fetching forecast.");
+  }
+}
 
-        if (forecast.msg) {
-          alert(forecast.msg);
-          return;
-        }
+fetchUserSales();
+</script>
 
-        renderChart(forecast, "Forecasted Sales");
-      } catch (err) {
-        alert("Error fetching forecast.");
-      }
-    }
-
-    fetchUserSales();
-  </script>
 </body>
 </html>

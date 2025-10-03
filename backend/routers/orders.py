@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from backend.db.database import get_db
@@ -7,8 +7,8 @@ from backend.models.order import Order
 from backend.models.product import Product
 from backend.models.activity import Activity
 from backend.utils.dependencies import get_current_user
-from fastapi.responses import JSONResponse
 from backend.ml.sales_forecast import get_daily_sales, forecast_sales
+
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -81,13 +81,31 @@ async def overall_sales(db: AsyncSession = Depends(get_db)):
     sales = q.all()
     return [{"day": str(row.day), "total_sales": row.total_sales} for row in sales]
 
+
+# Get daily sales (overall or by user)
 @router.get("/sales/daily")
-async def daily_sales(db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
-    df = await get_daily_sales(db)
+async def daily_sales(
+    user_id: int = Query(None, description="Optional: filter sales for a specific user"),
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Returns daily sales aggregated by date.
+    Optional: Filter by user_id.
+    """
+    df = await get_daily_sales(db, user_id=user_id)
     return df.to_dict(orient="records")
 
 
+# Forecast sales (overall or by user)
 @router.get("/sales/forecast")
-async def sales_forecast(periods: int, db: AsyncSession = Depends(get_db)):
-    forecast = await forecast_sales(db, periods=periods)
+async def sales_forecast_endpoint(
+    periods: int = Query(30, description="Number of days to forecast"),
+    user_id: int = Query(None, description="Optional: forecast for specific user"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Forecast sales for either all users or a specific user.
+    """
+    forecast = await forecast_sales(db, periods=periods, user_id=user_id)
     return forecast
