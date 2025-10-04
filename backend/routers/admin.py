@@ -48,7 +48,8 @@ async def get_users(db: AsyncSession = Depends(get_db)):
                     id=user.id,
                     username=user.username,
                     email=user.email,
-                    sentiment=sentiment
+                    sentiment=sentiment,
+                    tier=user.tier
                 ))
         logger.info(f"output is: {output}")
         return output

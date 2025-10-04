@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class UserCreate(BaseModel):
     username: str
@@ -17,6 +18,7 @@ class UserOut(BaseModel):
     username: str
     email: str
     sentiment: str
+    tier: Optional[str] = None
 
     class Config:
         orm_mode = True

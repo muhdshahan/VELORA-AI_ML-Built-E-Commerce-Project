@@ -3,6 +3,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer
 from backend.db.database import Base
+from typing import Optional
 
 class User(Base):
     __tablename__ = "users"
@@ -12,4 +13,4 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True,index=True)
     hashed_password: Mapped[str] = mapped_column(String)
     role: Mapped[str] = mapped_column(String)
-    tier: Mapped[str] = mapped_column(default="Silver")  # Default tier
+    tier: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)

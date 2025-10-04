@@ -47,8 +47,8 @@ async def segment_customers(db: AsyncSession, n_clusters=3):
     for _, row in df.iterrows():
         await db.execute(
             User.__table__.update()
-            .where(User.id == row["user_id"]
-            .values(tier=row["tier"]))
+            .where(User.id == row["user_id"])
+            .values(tier=row["tier"])
         )
     await db.commit()
 
