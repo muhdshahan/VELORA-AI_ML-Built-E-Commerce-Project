@@ -14,3 +14,4 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String)
     role: Mapped[str] = mapped_column(String)
     tier: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    discount_percentage: Mapped[int] = mapped_column(default=0)

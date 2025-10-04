@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class TierDiscountUpdate(BaseModel):
     tier: str
-    discount: int = Field(..., ge=1, le=90)
+    discount_percentage: int = Field(..., ge=1, le=90)
 
     class Config:
         orm_mode=True
