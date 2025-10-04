@@ -6,6 +6,8 @@ from backend.db.database import get_db
 from backend.models import User, Feedback  
 from backend.schemas.user import UserOut
 from backend.ml.sentiment import analyze_sentiment
+from backend.utils.dependencies import get_current_user
+from backend.ml.customer_segmentation import segment_customers
 
 # Basic logger setup
 logging.basicConfig(
@@ -54,3 +56,8 @@ async def get_users(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error in get_users: {e}")
         return []
+    
+
+@router.post("/segment-customers")
+async def segment_customers_endpoint(db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
+    return await segment_customers(db)
