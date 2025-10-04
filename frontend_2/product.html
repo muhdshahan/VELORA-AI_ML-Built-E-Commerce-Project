@@ -117,6 +117,12 @@
 <body>
 <main>
   <h2>Product Detail</h2>
+  <p class="price">
+    <span class="original">₹${product.price}</span> 
+    <span class="discounted">₹${discountedPrice.toFixed(2)}</span>
+  </p>
+  <p class="user-discount">You have ${user.tier_discount}% OFF on all products 🎉</p>
+
   <div class="button-row">
     <button id="viewCartBtn">View Cart</button>
     <button id="backCatalogBtn">Go back to Catalog</button>

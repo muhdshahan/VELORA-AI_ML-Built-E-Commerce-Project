@@ -166,6 +166,32 @@
     }
   }
 
+  async function updateTierDiscount() {
+    const tier = document.getElementById("tierSelect").value;
+    const discount = parseInt(document.getElementById("discountInput").value);
+
+    if (discount < 1 || discount > 90) {
+      alert("Discount must be between 1% and 90%");
+      return;
+    }
+
+    try {
+      const resp = await fetch("http://localhost:8000/admin/update-tier-discount", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
+        },
+        body: JSON.stringify({ tier, discount })
+      });
+
+      const result = await resp.json();
+      alert(result.msg);
+    } catch (err) {
+      alert("Error updating discount.");
+    }
+  }
+
   async function segmentCustomers() {
     try {
       const resp = await fetch("http://localhost:8000/admin/segment-customers", {

@@ -1,13 +1,15 @@
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import update
 from backend.db.database import get_db  
 from backend.models import User, Feedback  
 from backend.schemas.user import UserOut
 from backend.ml.sentiment import analyze_sentiment
 from backend.utils.dependencies import get_current_user
 from backend.ml.customer_segmentation import segment_customers
+from backend.schemas.discount import TierDiscountUpdate
 
 # Basic logger setup
 logging.basicConfig(
@@ -62,3 +64,15 @@ async def get_users(db: AsyncSession = Depends(get_db)):
 @router.post("/segment-customers")
 async def segment_customers_endpoint(db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     return await segment_customers(db)
+
+@router.post("/update-tier-discount")
+async def update_tier_discount(data: TierDiscountUpdate, db: AsyncSession = Depends(get_db)):
+    if not (1 <= data.discount <= 90):
+        raise HTTPException(status_code=400, detail="Discount must be between 1 and 90")
+
+    await db.execute(
+        update(User).where(User.tier == data.tier).values(discount_percentage=data.discount)
+    )
+    await db.commit()
+
+    return {"msg": f"{data.tier} tier updated to {data.discount}% discount"}
