@@ -18,15 +18,63 @@
     body { min-height: 100vh; font-family: var(--font); background: var(--background); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; }
     .admin-container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 3rem 2vw; background: var(--background); font-family: var(--font); }
     h1 { font-family: var(--font); font-size: 2.8em; background: linear-gradient(90deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 2rem; text-align: center; }
+    h2 {
+      font-size: 1.9em;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--accent), var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
     .admin-actions { display: flex; gap: 1.5rem; margin-bottom: 2.1rem; flex-wrap: wrap; justify-content: center; }
     .admin-btn { padding: 0.76rem 1.5rem; border: none; border-radius: 10px; font-family: var(--font); font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.18s; box-shadow: var(--shadow); outline: none; }
     .admin-btn.light { background: var(--secondary); color: var(--primary); border: 2px solid var(--primary); }
     .admin-btn.light:hover { background: var(--accent); color: #fff; border: 2px solid var(--accent); }
     .admin-btn.dark, .logout-btn { background: var(--primary); color: #fff; border: none; width: 180px; margin: 42px auto 0 auto; display: block; }
     .admin-btn.dark:hover, .logout-btn:hover { background: var(--accent); color: #fff; }
+    .discount-config {
+      margin: 2rem auto;
+      text-align: center;
+      padding: 1rem;
+      background: var(--secondary);
+      border-radius: 12px;
+      width: 350px;
+      box-shadow: var(--shadow);
+    }
+    .discount-config h3 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    .discount-config label {
+      display: block;
+      margin: 0.5rem 0;
+    }
+    .discount-config input, .discount-config select {
+      padding: 6px 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
     .table-wrapper { width: 100%; display: flex; justify-content: center; margin-bottom: 2.2rem; }
     #usersContainer { width: 100%; max-width: 1050px; }
-    table { width: 100%; border-collapse: collapse; margin: 0 auto 1.2em auto; background: #fff; border-radius: var(--border-radius); overflow: hidden; box-shadow: var(--shadow); font-family: var(--font); font-size: 1.08rem; color: var(--text); }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin: 0 auto 1.2em auto; 
+      background: #fff; 
+      border-radius: 0;              
+      overflow: hidden; 
+      box-shadow: var(--shadow); 
+      font-family: var(--font); 
+      font-size: 1.08rem; 
+      color: var(--text); 
+      border: 1px solid #ddd;      
+    }
     th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid #ddd; }
     th { background: var(--primary); color: #fff; font-weight: 600; }
     tr:nth-child(even) { background: var(--secondary); }
@@ -44,6 +92,21 @@
       <button class="admin-btn light" id="segmentUsersBtn">Segment users</button>
     </div>
     <h2>Users</h2>
+    <div class="discount-config">
+    <h3>Set Tier Discounts</h3>
+    <label>Tier:
+      <select id="tierSelect">
+        <option value="Silver">Silver</option>
+        <option value="Gold">Gold</option>
+        <option value="Platinum">Platinum</option>
+      </select>
+    </label>
+    <label>Discount %:
+      <input type="number" id="discountInput" min="1" max="90" value="10">
+    </label>
+    <button class="admin-btn light" onclick="updateTierDiscount()">Update Discount</button>
+  </div>
+
     <div class="table-wrapper">
       <div id="usersContainer">Loading users...</div>
     </div>

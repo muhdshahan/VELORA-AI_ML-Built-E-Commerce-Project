@@ -136,6 +136,23 @@
   const productCard = document.getElementById('productCard');
   const recommendList = document.getElementById('recommendList');
   const productId = localStorage.getItem('selected_product_id');
+  let userDiscount = 0; // default 0%
+
+  async function fetchUserDiscount() {
+    const token = localStorage.getItem('token') || '';
+    if (!token) return;
+
+    try {
+      const resp = await fetch('http://localhost:8000/users/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!resp.ok) return;
+      const user = await resp.json();
+      userDiscount = user.discount_percentage || 0;
+    } catch (e) {
+      console.log("Error fetching user info:", e);
+    }
+  }
 
   async function loadProduct(id) {
     try {
@@ -143,12 +160,18 @@
       if (!resp.ok) throw new Error('Failed to fetch product.');
       const product = await resp.json();
 
+      const discountedPrice = product.price * (1 - (userDiscount / 100));
+
       productCard.innerHTML = `
         <img src="${product.image_url || 'assets/sample_product.jpg'}" alt="${product.name}">
         <div class="product-info">
           <b>${product.name}</b>
           <div>Category: ${product.category}</div>
-          <div class="caption">₹${product.price}</div>
+          <div class="caption">
+            <span style="text-decoration: line-through;">₹${product.price}</span>
+            <span style="color:#48C9B0; font-weight:bold;"> ₹${discountedPrice.toFixed(2)}</span>
+            ${userDiscount > 0 ? `<span style="color:#6A5ACD;">(${userDiscount}% OFF!)</span>` : ''}
+          </div>
           <div>Description: ${product.description}</div>
           <div>Stock: ${product.stock}</div>
           <div class="input-row">
@@ -169,7 +192,11 @@
               'Content-Type': 'application/json',
               'Authorization': token ? `Bearer ${token}` : ''
             },
-            body: JSON.stringify({product_id: product.id, quantity: qty})
+            body: JSON.stringify({
+              product_id: product.id,
+              quantity: qty,
+              price: discountedPrice.toFixed(2)
+            })
           });
           if (resp.ok) alert('Added to cart!');
           else alert('Failed to add to cart.');
@@ -178,7 +205,7 @@
         }
       });
 
-      // Optional: fetch recommended products
+      // Recommended products
       try {
         const recResp = await fetch(`http://localhost:8000/products/recommended/${id}`);
         if (recResp.ok) {
@@ -207,8 +234,11 @@
     window.location.href = 'cart.html';
   });
 
-  if (productId) loadProduct(productId);
-  else productCard.innerHTML = 'Product not found. Go back to <a href="catalog.html">catalog</a>.';
+  if (productId) {
+    fetchUserDiscount().then(() => loadProduct(productId));
+  } else {
+    productCard.innerHTML = 'Product not found. Go back to <a href="catalog.html">catalog</a>.';
+  }
 </script>
 </body>
 </html>
