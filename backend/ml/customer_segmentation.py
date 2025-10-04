@@ -7,7 +7,7 @@ from backend.models.user import User
 from backend.models.order import Order
 from datetime import datetime
 
-async def segement_customers(db: AsyncSession, n_clusters=3):
+async def segment_customers(db: AsyncSession, n_clusters=3):
     """
     ML-based customer segmentation using KMeans.
     """

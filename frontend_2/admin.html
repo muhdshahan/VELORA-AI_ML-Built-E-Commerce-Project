@@ -140,6 +140,7 @@
     <div class="admin-actions">
       <button class="admin-btn light" id="addProductBtn">Add Product</button>
       <button class="admin-btn light" id="viewProductsBtn">View All Products</button>
+      <button class="admin-btn light" id="segmentUsersBtn">Segment users</button>
     </div>
     <h2>Users</h2>
     <div class="table-wrapper">
@@ -194,6 +195,19 @@
         }
       } catch (err) {
         usersContainer.innerHTML = `<p style="color:red;">Error connecting to backend: ${err}</p>`;
+      }
+    }
+
+    async function segmentCustomers() {
+      try {
+        const resp = await fetch("http://localhost:8000/admin/segment-customers", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${localStorage.getItem("token") || ""}` }
+        });
+        const result = await resp.json();
+        alert(result.msg);
+      } catch (err) {
+        alert("Error segmenting customers.");
       }
     }
 
