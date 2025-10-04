@@ -61,7 +61,7 @@
     .chart-wrapper {
       width: 100%;
       max-width: 850px;
-      height: 330px; /* slightly taller */
+      height: 330px;
       margin: 1.5rem 0;
     }
 
@@ -72,6 +72,36 @@
       border-radius: 12px;
       padding: 1rem;
       box-shadow: var(--shadow);
+    }
+
+    /* Date filter */
+    .filter-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1rem;
+      gap: 0.7rem;
+    }
+
+    label {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .date-filter {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding: 0.5rem;
+    }
+
+    input[type="date"],
+    input[type="number"] {
+      padding: 0.4rem 0.8rem;
+      border: 2px solid var(--primary);
+      border-radius: 10px;
+      font-family: var(--font);
+      cursor: pointer;
     }
 
     /* Buttons */
@@ -110,13 +140,31 @@
   <div class="admin-container">
     <h1>Overall Sales Analysis</h1>
 
+    <!-- Date Filter -->
+    <div class="filter-container">
+      <label for="dateRange">Filter Sales by Date:</label>
+      <div class="date-filter">
+        <input type="date" id="startDate">
+        <input type="date" id="endDate">
+        <button class="admin-btn light" onclick="applyDateFilter()">Apply Filter</button>
+      </div>
+    </div>
+
     <!-- Overall Sales Chart -->
     <div class="chart-wrapper">
       <canvas id="overallChart"></canvas>
     </div>
 
     <!-- Forecast Chart -->
-    <h3>Sales Forecast (Next 7 Days)</h3>
+    <h3>Sales Forecast</h3>
+    <!-- 🔹 Forecast Input + Button -->
+    <div class="filter-container">
+      <label for="forecastDays">Enter Forecast Days:</label>
+      <div class="date-filter">
+        <input type="number" id="forecastDays" min="1" value="7">
+        <button class="admin-btn light" onclick="applyForecast()">Get Forecast</button>
+      </div>
+    </div>
     <div class="chart-wrapper">
       <canvas id="forecastChart"></canvas>
     </div>
@@ -129,55 +177,88 @@
   </div>
 
   <script>
+    let overallSalesData = [];
+    let overallChartInstance;
+    let forecastChartInstance;
+
     async function fetchOverallSales() {
       try {
         const resp = await fetch("http://localhost:8000/orders/sales/overall");
         const data = await resp.json();
+        overallSalesData = data;
 
         const labels = data.map(d => d.day);
         const values = data.map(d => d.total_sales);
 
-        new Chart(document.getElementById("overallChart"), {
-          type: 'bar',
-          data: { 
-            labels, 
-            datasets: [{
-              label: 'Total Sales',
-              data: values,
-              backgroundColor: '#48C9B0'
-            }] 
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: true, labels: { color: '#2C3E50' } }
-            },
-            scales: {
-              x: { ticks: { color: '#2C3E50' } },
-              y: { ticks: { color: '#2C3E50' } }
-            }
-          }
-        });
+        renderOverallChart(labels, values);
       } catch (err) {
         console.error("Error loading overall sales", err);
       }
     }
 
-    async function fetchForecast() {
+    function renderOverallChart(labels, values) {
+      if (overallChartInstance) overallChartInstance.destroy();
+
+      overallChartInstance = new Chart(document.getElementById("overallChart"), {
+        type: 'bar',
+        data: { 
+          labels, 
+          datasets: [{
+            label: 'Total Sales',
+            data: values,
+            backgroundColor: '#48C9B0'
+          }] 
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, labels: { color: '#2C3E50' } }
+          },
+          scales: {
+            x: { ticks: { color: '#2C3E50' } },
+            y: { ticks: { color: '#2C3E50' } }
+          }
+        }
+      });
+    }
+
+    function applyDateFilter() {
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+
+      if (!start) {
+        alert("Please select a start date.");
+        return;
+      }
+
+      const filtered = overallSalesData.filter(d => {
+        if (end) return d.day >= start && d.day <= end;
+        else return d.day >= start;
+      });
+
+      const labels = filtered.map(d => d.day);
+      const values = filtered.map(d => d.total_sales);
+
+      renderOverallChart(labels, values);
+    }
+
+    async function fetchForecast(periods = 7) {
       try {
-        const resp = await fetch("http://localhost:8000/orders/sales/forecast");
+        const resp = await fetch(`http://localhost:8000/orders/sales/forecast?periods=${periods}`);
         const data = await resp.json();
 
-        const labels = data.forecast.map(d => d.ds);
-        const values = data.forecast.map(d => d.yhat);
+        const labels = data.map(d => d.ds);
+        const values = data.map(d => d.yhat);
 
-        new Chart(document.getElementById("forecastChart"), {
+        if (forecastChartInstance) forecastChartInstance.destroy();
+
+        forecastChartInstance = new Chart(document.getElementById("forecastChart"), {
           type: 'line',
           data: { 
             labels, 
             datasets: [{
-              label: 'Forecast Sales',
+              label: `Forecast Sales (Next ${periods} Days)`,
               data: values,
               borderColor: '#6A5ACD',
               fill: false
@@ -200,6 +281,12 @@
       }
     }
 
+    function applyForecast() {
+      const periods = parseInt(document.getElementById("forecastDays").value) || 7;
+      fetchForecast(periods);
+    }
+
+    // initial load
     fetchOverallSales();
     fetchForecast();
   </script>

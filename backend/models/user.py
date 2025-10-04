@@ -12,3 +12,4 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True,index=True)
     hashed_password: Mapped[str] = mapped_column(String)
     role: Mapped[str] = mapped_column(String)
+    tier: Mapped[str] = mapped_column(default="Silver")  # Default tier

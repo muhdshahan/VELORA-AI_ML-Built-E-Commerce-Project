@@ -286,7 +286,7 @@ function applyDateFilter() {
 async function applyForecast() {
   const periods = parseInt(document.getElementById("forecastDays").value) || 30;
   try {
-    const resp = await fetch(`http://localhost:8000/orders/sales/forecast?periods=${periods}`, {
+    const resp = await fetch(`http://localhost:8000/orders/sales/forecast?periods=${periods}&user_id=${userId}`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token") || ""}` }
     });
     const forecast = await resp.json();
