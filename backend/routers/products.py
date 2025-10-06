@@ -32,26 +32,16 @@ async def list_products(db: AsyncSession = Depends(get_db)):
     q = await db.execute(select(Product))
     return q.scalars().all()
 
-# Get single product view: logs 'viewed', returns collaborative recommendations
-@router.get("/view{product_id}")
-async def view_product(product_id: int, db:AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
-    # fetch product
-    q = await db.execute(select(Product).filter(Product.id==product_id))
+# Single product endpoint
+@router.get("/{product_id}", response_model=ProductOut)
+async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
+    q = await db.execute(select(Product).filter(Product.id == product_id))
     product = q.scalars().first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    
-    # log activity (view)
-    activity = Activity(
-        user_id=current_user.id,
-        product_id=product.id,
-        action="viewed",
-        time_spent=0.0
-        )
-    db.add(activity)
-    await db.commit()
+    return product
 
-    # get collaborative recommendations
-    recommendations = await collaborative_recommendations(db, product.id)
+@router.get("/recommended/{product_id}", response_model=list[ProductOut])
+async def get_recommended_products(product_id: int, db: AsyncSession = Depends(get_db)):
+    recommendations = await collaborative_recommendations(db, product_id)
     return recommendations
-

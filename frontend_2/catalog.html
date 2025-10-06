@@ -189,125 +189,160 @@
   </div>
 
   <script>
-    const productList = document.getElementById("productList");
-    const searchInput = document.getElementById("searchInput");
-    const productCount = document.getElementById("productCount");
-    let allProducts = [];
+  const productList = document.getElementById("productList");
+  const searchInput = document.getElementById("searchInput");
+  const productCount = document.getElementById("productCount");
+  let allProducts = [];
+  let userDiscount = 0; // global variable
 
-    async function fetchProducts() {
-      try {
-        const resp = await fetch("http://localhost:8000/products/");
-        const data = await resp.json();
-        if (resp.ok) {
-          allProducts = data;
-          renderProducts(data);
-        } else {
-          productList.innerHTML = `<p style="color:red;">${data.error || "Failed to load products."}</p>`;
-        }
-      } catch (err) {
-        productList.innerHTML = `<p style="color:red;">Error connecting to backend: ${err}</p>`;
+  async function fetchUserDiscount() {
+    const token = localStorage.getItem('token') || '';
+    if (!token) return;
+
+    try {
+      const resp = await fetch('http://localhost:8000/users/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!resp.ok) return;
+      const user = await resp.json();
+      userDiscount = Number(user.discount_percentage || 0);
+    } catch (e) {
+      console.log("Error fetching user info:", e);
+    }
+  }
+
+  async function fetchProducts() {
+    try {
+      const resp = await fetch("http://localhost:8000/products/");
+      const data = await resp.json();
+      if (resp.ok) {
+        allProducts = data;
+        renderProducts(data);
+      } else {
+        productList.innerHTML = `<p style="color:red;">${data.error || "Failed to load products."}</p>`;
       }
+    } catch (err) {
+      productList.innerHTML = `<p style="color:red;">Error connecting to backend: ${err}</p>`;
+    }
+  }
+
+  function renderProducts(products) {
+    productList.innerHTML = '';
+    productCount.textContent = `${products.length} products found`;
+    if (products.length === 0) {
+      productList.innerHTML = '<p style="text-align:center;">No products found.</p>';
+      return;
     }
 
-    function renderProducts(products) {
-      productList.innerHTML = '';
-      productCount.textContent = `${products.length} products found`;
-      if (products.length === 0) {
-        productList.innerHTML = '<p style="text-align:center;">No products found.</p>';
-        return;
-      }
+    products.forEach(product => {
+      const discountedPrice = Number(product.price) * (1 - userDiscount / 100);
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <img src="${product.image_url || 'assets/sample_product.jpg'}" alt="${product.name}">
+        <div class="product-info">
+          <b>${product.name}</b> (${product.category})
+          <div>
+            <span style="text-decoration: line-through;">₹${Number(product.price).toFixed(2)}</span>
+            <span style="color:#48C9B0; font-weight:bold;"> ₹${discountedPrice.toFixed(2)}</span>
+            ${userDiscount > 0 ? `<span style="color:#6A5ACD;">(${userDiscount}% OFF!)</span>` : ''}
+          </div>
+          <div>${product.description}</div>
+        </div>
+        <div class="product-actions">
+          <button class="btn light" onclick="viewProduct(${product.id})">View</button>
+          <div>
+            <input type="number" min="1" max="${product.stock}" value="1" id="qty_${product.id}">
+            <button class="btn light" onclick="addToCart(${product.id})">Add to Cart</button>
+          </div>
+        </div>
+      `;
+      productList.appendChild(card);
+    });
+  }
 
-      products.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <img src="${product.image_url || 'assets/sample_product.jpg'}" alt="${product.name}">
-          <div class="product-info">
-            <b>${product.name}</b> (${product.category}) ₹${product.price}
-            <div>${product.description}</div>
-          </div>
-          <div class="product-actions">
-            <button class="btn light" onclick="viewProduct(${product.id})">View</button>
-            <div>
-              <input type="number" min="1" max="${product.stock}" value="1" id="qty_${product.id}">
-              <button class="btn light" onclick="addToCart(${product.id})">Add to Cart</button>
-            </div>
-          </div>
-        `;
-        productList.appendChild(card);
+  async function searchProducts(query) {
+    if (!query) {
+      renderProducts(allProducts);
+      return;
+    }
+    try {
+      const resp = await fetch("http://localhost:8000/search/smart", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query})
+      });
+      const data = await resp.json();
+      if (resp.ok) renderProducts(data);
+      else renderProducts([]);
+    } catch (err) {
+      console.error(err);
+      renderProducts([]);
+    }
+  }
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    searchProducts(query);
+  });
+
+  function viewProduct(id) {
+    localStorage.setItem('selected_product_id', id);
+    window.location.href = 'product.html';
+  }
+
+  async function addToCart(id) {
+    const qtyInput = document.getElementById(`qty_${id}`);
+    const qty = parseInt(qtyInput.value) || 1;
+    // Find the product in allProducts
+    const product = allProducts.find(p => p.id === id);
+    if (!product) return alert('Product not found.');
+
+    const discountedPrice = Number(product.price) * (1 - userDiscount / 100);
+
+    try {
+      const token = localStorage.getItem('token') || '';
+      const resp = await fetch('http://localhost:8000/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({
+              product_id: product.id,
+              quantity: qty,
+              price: discountedPrice.toFixed(2)
+            })
+      });
+      if (resp.ok) alert('Added to cart!');
+      else alert('Failed to add to cart.');
+    } catch(e) {
+      alert('Error connecting to backend.');
+    }
+  }
+
+  document.getElementById('viewCartBtn').addEventListener('click', () => {
+    window.location.href = 'cart.html';
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    const feedback = prompt("Enter feedback before logout:");
+    if (feedback && feedback.trim() !== "") {
+      const user_id = localStorage.getItem('user_id');
+      fetch('http://localhost:8000/feedback/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({user_id, text: feedback})
+      }).finally(() => {
+        localStorage.clear();
+        window.location.href = 'index.html';
       });
     }
+  });
 
-    async function searchProducts(query) {
-      if (!query) {
-        renderProducts(allProducts);
-        return;
-      }
-      try {
-        const resp = await fetch("http://localhost:8000/search/smart", {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({query})
-        });
-        const data = await resp.json();
-        if (resp.ok) renderProducts(data);
-        else renderProducts([]);
-      } catch (err) {
-        console.error(err);
-        renderProducts([]);
-      }
-    }
+  // Fetch user discount first, then products
+  fetchUserDiscount().then(fetchProducts);
+</script>
 
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.toLowerCase();
-      searchProducts(query);
-    });
-
-    function viewProduct(id) {
-      localStorage.setItem('selected_product', id);
-      window.location.href = 'product.html';
-    }
-
-    async function addToCart(id) {
-      const qty = parseInt(document.getElementById(`qty_${id}`).value);
-      try {
-        const token = localStorage.getItem('token') || '';
-        const resp = await fetch('http://localhost:8000/cart/add', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          },
-          body: JSON.stringify({product_id: id, quantity: qty})
-        });
-        if (resp.ok) alert('Added to cart!');
-        else alert('Failed to add to cart.');
-      } catch(e) {
-        alert('Error connecting to backend.');
-      }
-    }
-
-    document.getElementById('viewCartBtn').addEventListener('click', () => {
-      window.location.href = 'cart.html';
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      // Optional: show feedback before logout
-      const feedback = prompt("Enter feedback before logout:");
-      if (feedback && feedback.trim() !== "") {
-        const user_id = localStorage.getItem('user_id');
-        fetch('http://localhost:8000/feedback/', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({user_id, text: feedback})
-        }).finally(() => {
-          localStorage.clear();
-          window.location.href = 'index.html';
-        });
-      }
-    });
-
-    fetchProducts();
-  </script>
 </body>
 </html>

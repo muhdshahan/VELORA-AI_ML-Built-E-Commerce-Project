@@ -168,10 +168,10 @@
 
   async function updateTierDiscount() {
     const tier = document.getElementById("tierSelect").value;
-    const discount = parseInt(document.getElementById("discountInput").value);
+    const discount_percentage = parseInt(document.getElementById("discountInput").value);
 
-    if (discount < 1 || discount > 90) {
-      alert("Discount must be between 1% and 90%");
+    if (discount_percentage < 1 || discount_percentage > 90) {
+      alert("Discount Percentage must be between 1% and 90%");
       return;
     }
 
@@ -182,7 +182,7 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
         },
-        body: JSON.stringify({ tier, discount })
+        body: JSON.stringify({ tier, discount_percentage })
       });
 
       const result = await resp.json();

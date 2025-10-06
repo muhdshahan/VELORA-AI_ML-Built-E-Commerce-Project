@@ -67,12 +67,12 @@ async def segment_customers_endpoint(db: AsyncSession = Depends(get_db), current
 
 @router.post("/update-tier-discount")
 async def update_tier_discount(data: TierDiscountUpdate, db: AsyncSession = Depends(get_db)):
-    if not (1 <= data.discount <= 90):
+    if not (1 <= data.discount_percentage <= 90):
         raise HTTPException(status_code=400, detail="Discount must be between 1 and 90")
 
     await db.execute(
-        update(User).where(User.tier == data.tier).values(discount_percentage=data.discount)
+        update(User).where(User.tier == data.tier).values(discount_percentage=data.discount_percentage)
     )
     await db.commit()
 
-    return {"msg": f"{data.tier} tier updated to {data.discount}% discount"}
+    return {"msg": f"{data.tier} tier updated to {data.discount_percentage}% discount"}
